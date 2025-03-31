@@ -24,7 +24,7 @@ train_ds = train_ds.cache()
 train_ds = train_ds.shuffle(ds_info.splits['train'].num_examples)
 train_ds = train_ds.batch(64)
 
-train_ds, pool_ds = tf.keras.utils.split_dataset(train_ds, left_size=0.005, shuffle=True, seed=42)
+train_ds, pool_ds = tf.keras.utils.split_dataset(train_ds, left_size=0.05, shuffle=True, seed=42)
 train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
 
 test_ds = test_ds.map(normalize_img, num_parallel_calls=tf.data.AUTOTUNE)
@@ -60,7 +60,7 @@ def query_entropy_sampling(preds, n=64):
     return query_indices
 
 def query_random_sampling(preds, n=64):
-    indices = np.arange(0, len(pool_data_random)+1)
+    indices = np.arange(0, len(pool_data_random))
     query_indices = np.random.choice(indices, size=n, replace=False)
     return query_indices
 
@@ -68,12 +68,12 @@ def query_random_sampling(preds, n=64):
 def create_model():
     model = tf.keras.models.Sequential([
         tf.keras.layers.Flatten(input_shape=(28,28)),
-        tf.keras.layers.Dense(32, activation='relu'),
-        tf.keras.layers.Dense(32, activation='relu'),
+        tf.keras.layers.Dense(64, activation='relu'),
+        tf.keras.layers.Dense(64, activation='relu'),
         tf.keras.layers.Dense(10, activation='softmax')
     ])
     model.compile(optimizer=tf.keras.optimizers.Adam(0.001),
-                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                   metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
     return model
 
@@ -96,9 +96,9 @@ train_data_random = initial_train_data.copy()
 pool_data_random  = initial_pool_data.copy()
 
 #LEARNING LOOP AND PARAMS
-n_rounds = 20
-query_size = 128
-epochs_per_round = 6
+n_rounds = 50
+query_size = 32
+epochs_per_round = 15
 
 #LISTS TO STORE ACCURACY
 performance_lc = []
