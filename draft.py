@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.stats as stats
 
 tf.random.set_seed(42)
 np.random.seed(42)
@@ -170,6 +171,28 @@ for round in range(n_rounds):
         print(f"Random Sampling Test Accuracy: {acc:.4f}")
 
 #VISUALIZE TO COMPARE
+lc_last10      = performance_lc[-10:]
+ms_last10      = performance_ms[-10:]
+entropy_last10 = performance_entropy[-10:]
+random_last10  = performance_random[-10:]
+
+def compare_strategies(data1, data2, name1, name2):
+    #T-TEST
+    t_stat, p_val = stats.ttest_rel(data1, data2)
+    #WILCOXON TEST
+    w_stat, p_val_w = stats.wilcoxon(data1, data2)
+    print(f"Comparison: {name1} vs {name2}")
+    print(f"  Paired t-test: t = {t_stat:.3f}, p = {p_val:.3f}")
+    print(f"  Wilcoxon test: stat = {w_stat:.3f}, p = {p_val_w:.3f}")
+    print()
+
+compare_strategies(lc_last10, ms_last10, "Least Confidence", "Margin Sampling")
+compare_strategies(lc_last10, entropy_last10, "Least Confidence", "Entropy Sampling")
+compare_strategies(lc_last10, random_last10, "Least Confidence", "Random Sampling")
+compare_strategies(ms_last10, entropy_last10, "Margin Sampling", "Entropy Sampling")
+compare_strategies(ms_last10, random_last10, "Margin Sampling", "Random Sampling")
+compare_strategies(entropy_last10, random_last10, "Entropy Sampling", "Random Sampling")
+
 rounds = np.arange(1, n_rounds + 1)
 plt.figure(figsize=(8,6))
 plt.plot(rounds, performance_lc, marker='o', label="Least Confidence")
